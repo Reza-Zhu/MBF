@@ -1,0 +1,17 @@
+# super parameters
+
+LPN : 1
+block : 2
+batch_size : 16
+model : Release
+query : drone
+classes : 701
+num_epochs : 150
+drop_rate : 0.35
+weight_decay : 0.0001
+lr : 0.01
+name: Release_final_weight
+dataset_path: /home/sues/media/disk2/University-Release-MultiModel/University-Release
+weight_save_path: /home/sues/save_model_weight
+image_size: 384
+fp16 : 1
