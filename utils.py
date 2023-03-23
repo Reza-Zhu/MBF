@@ -15,12 +15,12 @@ import torch.distributed as dist
 # from new_model import two_view_net
 
 
-def get_yaml_value(key_name, file_name="settings.yaml"):
-    f = open(file_name, 'r', encoding="utf-8")
+def get_yaml_value(config_path):
+    f = open(config_path, 'r', encoding="utf-8")
     t_value = yaml.load(f, Loader=yaml.FullLoader)
     f.close()
-    params = t_value[key_name]
-    return params
+    # params = t_value[key_name]
+    return t_value
 
 
 def save_network(network, dir_model_name, epoch_label, loss):

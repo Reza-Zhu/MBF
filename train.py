@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 import time
 import torch
+import argparse
+
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -15,13 +17,11 @@ from Preprocessing import create_U1652_dataloader
 import random
 import os
 
-
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
 # torch.cuda.manual_seed(random.randint(1, 100))
 setup_seed()
 cudnn.benchmark = True
-
 
 def one_LPN_output(outputs, labels, criterion, block):
     # part = {}
@@ -40,22 +40,24 @@ def one_LPN_output(outputs, labels, criterion, block):
     return preds, loss
 
 
-def train():
-    classes = get_yaml_value("classes")
-    num_epochs = get_yaml_value("num_epochs")
-    drop_rate = get_yaml_value("drop_rate")
-    lr = get_yaml_value("lr")
-    LPN = get_yaml_value("LPN")
-    weight_decay = get_yaml_value("weight_decay")
-    model_name = get_yaml_value("model")
-    batchsize = get_yaml_value("batch_size")
-    weight_save_path = get_yaml_value("weight_save_path")
-    block = get_yaml_value("block")
-    fp16 = get_yaml_value("fp16")
+def train(config_path):
+    param_dict = get_yaml_value(config_path)
+    print(param_dict)
+    classes = param_dict["classes"]
+    num_epochs = param_dict["num_epochs"]
+    drop_rate = param_dict["drop_rate"]
+    lr = param_dict["lr"]
+    weight_decay = param_dict["weight_decay"]
+    model_name = param_dict["model"]
+    fp16 = param_dict["fp16"]
+    weight_save_path = param_dict["weight_save_path"]
+    LPN = param_dict["LPN"]
+    batchsize = param_dict["batch_size"]
+    all_block = param_dict["block"]
+    data_dir = param_dict["dataset_path"]
+    image_size = param_dict["image_size"]
 
-    all_block = block
-
-    dataloaders, image_datasets = create_U1652_dataloader()
+    dataloaders, image_datasets = create_U1652_dataloader(data_dir, batchsize, image_size)
     dataset_sizes = {x: len(image_datasets[x]) for x in ['satellite', 'drone']}
 
     print(dataset_sizes)
@@ -63,25 +65,15 @@ def train():
     print(len(class_names))
 
     model = Hybird_ViT(classes, drop_rate).cuda()
-    path = "/home/sues/media/disk2/save_sues_weight/sues-release_200_2022-11-18-23:13:06/net_078.pth"
-    model.load_state_dict(torch.load(path))
 
+    # apply LPN strategy
     if LPN:
         ignored_params = list()
         for i in range(all_block):
             cls_name = 'classifier' + str(i)
             c = getattr(model, cls_name)
             ignored_params += list(map(id, c.parameters()))
-        
-        # cls_hbp_name = 'classifier_hbp'
-        # c = getattr(model, cls_hbp_name)
-        # ignored_params += list(map(id, c.parameters()))
-        #
-        # cls_name = 'classifier'
-        # c = getattr(model, cls_name)
-        # ignored_params += list(map(id, c.parameters()))
-        
-        
+
         base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())
 
         optim_params = [{'params': base_params, 'lr': 0.1 * lr}]
@@ -89,13 +81,6 @@ def train():
             cls_name = 'classifier' + str(i)
             c = getattr(model, cls_name)
             optim_params.append({'params': c.parameters(), 'lr': lr})
-
-        # cls_hbp_name = 'classifier_hbp'
-        # c = getattr(model, cls_hbp_name)
-        # optim_params.append({'params': c.parameters(), 'lr': lr})
-        # cls_name = 'classifier'
-        # c = getattr(model, cls_name)
-        # optim_params.append({'params': c.parameters(), 'lr': lr})
 
         optimizer = optim.SGD(optim_params, weight_decay=weight_decay, momentum=0.9, nesterov=True)
         # opt = torchcontrib.optim.SWA(optimizer)
@@ -108,15 +93,12 @@ def train():
             {'params': model.classifier.parameters(), 'lr': lr}
         ], weight_decay=weight_decay, momentum=0.9, nesterov=True)
 
-
     if fp16:
         # from apex.fp16_utils import *
         from apex import amp, optimizers
         model, optimizer_ft = amp.initialize(model, optimizer, opt_level="O2")
 
     criterion = nn.CrossEntropyLoss()
-    # criterion1 = nn.KLDivLoss()
-    # circle = circle_loss.CircleLoss(m=0.4, gamma=80)
     criterion_func = losses.TripletMarginLoss(margin=0.3)
 
     miner = miners.MultiSimilarityMiner()
@@ -132,6 +114,7 @@ def train():
     create_dir(save_path)
     print(save_path)
     parameter("name", dir_model_name)
+
     warm_epoch = 5
     warm_up = 0.1  # We start from the 0.1*lrRate
     warm_iteration = round(dataset_sizes['satellite'] / batchsize) * warm_epoch  # first 5 epoch
@@ -203,17 +186,13 @@ def train():
 
             # Identity loss
             loss = loss1 + loss2 + loss3 + loss4 + loss7 + loss8
-            # print(loss1, loss2, loss3, loss4, loss5, loss6, loss7, loss8)
+
             # Triplet loss
             hard_pairs = miner(feature1, label1)
             hard_pairs2 = miner(feature2, label2)
-            # hard_pairs3 = miner(feature3, label1)
-            # hard_pairs4 = miner(feature4, label2)
+
             loss += criterion_func(feature1, label1, hard_pairs) + \
                     criterion_func(feature2, label2, hard_pairs2)
-                    # criterion_func(feature3, label1, hard_pairs3) + \
-                    # criterion_func(feature4, label2, hard_pairs4)
-
 
             if epoch < warm_epoch:
                 warm_up = min(1.0, warm_up + 0.9 / warm_iteration)
@@ -247,8 +226,16 @@ def train():
                 print(model_name + " Epoch: " + str(epoch + 1) + " has saved with loss: " + str(epoch_loss))
 
 
-if __name__ == '__main__':
-    from U1652_test_and_evaluate import eval_and_test
+def parse_opt(known=False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='settings.yaml', help='config file XXX.yaml path')
+    opt = parser.parse_known_args()[0] if known else parser.parse_args()
 
-    train()
-    eval_and_test(384)
+    return opt
+
+
+if __name__ == '__main__':
+    opt = parse_opt(True)
+    print(opt.cfg)
+    train(opt.cfg)
+

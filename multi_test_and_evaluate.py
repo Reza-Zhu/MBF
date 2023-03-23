@@ -19,54 +19,30 @@ if torch.cuda.is_available():
     device = torch.device("cuda:0")
 
 def evaluate(qf, ql, gf, gl):
-    # print(qf.shape) torch.Size([512])
-    # print(gf.shape) torch.Size([51355, 512])
-    # print(ql) 0 ()
-    # print(gl) [0,0...0] len = 51355 shape = (51355,)
 
     query = qf.view(-1, 1)
-    # print(query.shape)  query.shape = (512,1)
-    # gf.shape = (51355, 512)
-    # 矩阵相乘
-
-    # score 是否可理解为当前余弦距离的排序？
     score = torch.mm(gf, query)
-    # score.shape = (51355,1)
     score = score.squeeze(1).cpu()
-    # score.shape = （51355,)
     score = score.numpy()
-    # print(score)
-    # print(score.shape)
 
     # predict index
     index = np.argsort(score)  # from small to large
-    # 从小到大的索引排列
-    # print("index before", index)
+
     index = index[::-1]
-    # print("index after", index)
-    # 从大到小的索引排列
 
     # index = index[0:2000]
     # good index
     query_index = np.argwhere(gl == ql)
-    # print(query_index.shape) (54, 1)
-    # gl = ql 返回标签值相同的索引矩阵
-    # 得到 ql：卫星图标签，gl：无人机图标签
-    # 即 卫星图标签在 gl中的索引位置 组成的矩阵
+
     good_index = query_index
 
-    # print(good_index)
-    # print(index[0:10])
     junk_index = np.argwhere(gl == -1)
-    # print(junk_index)  = []
 
     CMC_tmp = compute_mAP(index, good_index, junk_index)
     return CMC_tmp
 
 
 def compute_mAP(index, good_index, junk_index):
-    # CMC就是recall的，只要前K里面有一个正确答案就算recall成功是1否则是0
-    # mAP是传统retrieval的指标，算的是 recall和precision曲线，这个曲线和x轴的面积。
 
     ap = 0
     cmc = torch.IntTensor(len(index)).zero_()
@@ -78,31 +54,20 @@ def compute_mAP(index, good_index, junk_index):
     # remove junk_index
     mask = np.in1d(index, junk_index, invert=True)
     index = index[mask]
-    # print(index.shape) (51355,)
-    # if junk_index == []
-    # return index fully
+
 
     # find good_index index
     ngood = len(good_index)
-    # print("good_index", good_index) (54, 1)
-    # print(index)
-    # print(good_index)
+
     mask = np.in1d(index, good_index)
-    # print(mask)
-    # print(mask.shape)  (51355,)
-    # 51355 中 54 个对应元素变为了True
+
 
     rows_good = np.argwhere(mask == True)
-    # print(rows_good.shape) (54, 1)
-    # rows_good 得到这 54 个为 True 元素的索引位置
 
     rows_good = rows_good.flatten()
-    # print(rows_good.shape)  (54,)
-    # print(rows_good[0])
+
 
     cmc[rows_good[0]:] = 1
-    # print(cmc)
-    # print(cmc.shape) torch.Size([51355])
 
     # print(cmc)
     for i in range(ngood):
@@ -294,7 +259,6 @@ def eval_and_test(image_per_class):
         # shutil.copy('settings.yaml', os.path.join(save_path, "settings_saved.yaml"))
         # print(round(len(gallery_label)*0.01))
         print(evaluate_result)
-
 
 
 if __name__ == '__main__':

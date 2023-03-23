@@ -5,6 +5,7 @@ import time
 import timm
 import torch
 import shutil
+import argparse
 import numpy as np
 import pandas as pd
 from torch import nn
@@ -19,55 +20,26 @@ if torch.cuda.is_available():
 
 
 def evaluate(qf, ql, gf, gl):
-    # print(qf.shape) torch.Size([512])
-    # print(gf.shape) torch.Size([51355, 512])
-    # print(ql) 0 ()
-    # print(gl) [0,0...0] len = 51355 shape = (51355,)
-    # print(qf.shape)
-    query = qf.view(-1, 1)
-    # print(query.shape)  query.shape = (512,1)
-    # gf.shape = (51355, 512)
-    # 矩阵相乘
 
-    # score 是否可理解为当前余弦距离的排序？
+    query = qf.view(-1, 1)
     score = torch.mm(gf, query)
-    # score.shape = (51355,1)
     score = score.squeeze(1).cpu()
-    # score.shape = （51355,)
     score = score.numpy()
-    # print(score)
-    # print(score.shape)
 
     # predict index
     index = np.argsort(score)  # from small to large
-    # 从小到大的索引排列
-    # print("index before", index)
     index = index[::-1]
-    # print("index after", index)
-    # 从大到小的索引排列
 
-    # index = index[0:2000]
     # good index
     query_index = np.argwhere(gl == ql)
-    # print(query_index.shape) (54, 1)
-    # gl = ql 返回标签值相同的索引矩阵
-    # 得到 ql：卫星图标签，gl：无人机图标签
-    # 即 卫星图标签在 gl中的索引位置 组成的矩阵
     good_index = query_index
-
-    # print(good_index)
-    # print(index[0:10])
     junk_index = np.argwhere(gl == -1)
-    # print(junk_index)  = []
 
     CMC_tmp = compute_mAP(index, good_index, junk_index)
     return CMC_tmp
 
 
 def compute_mAP(index, good_index, junk_index):
-    # CMC就是recall的，只要前K里面有一个正确答案就算recall成功是1否则是0
-    # mAP是传统retrieval的指标，算的是 recall和precision曲线，这个曲线和x轴的面积。
-    # 你可以自己搜索一下mAP
 
     ap = 0
     cmc = torch.IntTensor(len(index)).zero_()
@@ -79,33 +51,20 @@ def compute_mAP(index, good_index, junk_index):
     # remove junk_index
     mask = np.in1d(index, junk_index, invert=True)
     index = index[mask]
-    # print(index.shape) (51355,)
-    # if junk_index == []
-    # return index fully
+
 
     # find good_index index
     ngood = len(good_index)
-    # print("good_index", good_index) (54, 1)
-    # print(index)
-    # print(good_index)
+
     mask = np.in1d(index, good_index)
-    # print(mask)
-    # print(mask.shape)  (51355,)
-    # 51355 中 54 个对应元素变为了True
+
 
     rows_good = np.argwhere(mask == True)
-    # print(rows_good.shape) (54, 1)
-    # rows_good 得到这 54 个为 True 元素的索引位置
 
     rows_good = rows_good.flatten()
-    # print(rows_good.shape)  (54,)
-    # print(rows_good[0])
 
     cmc[rows_good[0]:] = 1
-    # print(cmc)
-    # print(cmc.shape) torch.Size([51355])
 
-    # print(cmc)
     for i in range(ngood):
         d_recall = 1.0 / ngood
         # d_racall = 1/54
@@ -175,16 +134,19 @@ def extract_feature(model, dataloaders, block, LPN, view_index=1):
 
 
 ############################### main function #######################################
-def eval_and_test(image_size):
-    image_size = get_yaml_value("image_size")
+def eval_and_test(cfg_path, name, seqs):
+    param_dict = get_yaml_value(cfg_path)
+    image_size = param_dict['image_size']
+    if name == "":
+        name = param_dict["name"]
     data_transforms = transforms.Compose([
         transforms.Resize((image_size, image_size), interpolation=3),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    block = get_yaml_value("block")
-    LPN = get_yaml_value("LPN")
-    data_dir = get_yaml_value("dataset_path")
+    block = param_dict["block"]
+    LPN = param_dict["LPN"]
+    data_dir = param_dict["dataset_path"]
     all_block = block
     image_datasets = {x: Multimodel_Dateset(os.path.join(data_dir, 'test', x), data_transforms) for x in
                       ['gallery_satellite', 'gallery_drone', 'query_satellite', 'query_drone']}
@@ -195,28 +157,23 @@ def eval_and_test(image_size):
                                                   shuffle=False) for x in
                    ['gallery_satellite', 'gallery_drone', 'query_satellite', 'query_drone']}
     # print("Testing Start >>>>>>>>")
-    table_path = os.path.join(get_yaml_value("weight_save_path"),
-                              get_yaml_value("name") + ".csv")
-    save_model_list = glob.glob(os.path.join(get_yaml_value("weight_save_path"),
-                                             get_yaml_value('name'), "*.pth"))
+    table_path = os.path.join(param_dict["weight_save_path"],
+                              name + ".csv")
+    save_model_list = glob.glob(os.path.join(param_dict["weight_save_path"],
+                                             name, "*.pth"))
     # print(get_yaml_value("name"))
-    if os.path.exists(os.path.join(get_yaml_value("weight_save_path"),
-                                   get_yaml_value('name'))) and len(save_model_list) >= 1:
+    if os.path.exists(os.path.join(param_dict["weight_save_path"],
+                                   name)) and len(save_model_list) >= 1:
         if not os.path.exists(table_path):
             evaluate_csv = pd.DataFrame(index=["recall@1", "recall@5", "recall@10", "recall@1p", "AP", "time"])
         else:
             evaluate_csv = pd.read_csv(table_path)
             evaluate_csv.index = evaluate_csv["index"]
         for query in ['drone', 'satellite']:
-            for seq in range(-1, 0):
+            for seq in range(-seqs, 0):
                 # net_name = "mae_pretrained"
                 model, net_name = load_network(seq=seq)
-                # net_name = "LPN"
-                # model = Hybird_ViT(701, 0.2)
-                # model = model_.two_view_net(701, 0.3)
-                # model.load_state_dict(torch.load("/home/sues/save_model_weight/Release_final_weight/net_077.pth"))
-                # print(model)
-                # LPN
+
                 if LPN:
                     for i in range(all_block):
                         cls_name = 'classifier' + str(i)
@@ -324,7 +281,7 @@ def eval_and_test(image_size):
                 )
 
                 # show result and save
-                save_path = os.path.join(get_yaml_value("weight_save_path"), get_yaml_value('name'))
+                save_path = os.path.join(param_dict["weight_save_path"], name)
                 save_txt_path = os.path.join(save_path,
                                              '%s_to_%s_%s_%.2f_%.2f.txt' % (query_name[6:], gallery_name[8:], net_name[:7],
                                                                             recall_1, AP))
@@ -356,6 +313,18 @@ def eval_and_test(image_size):
     else:
         print("Don't have enough weights to evaluate!")
 
+def parse_opt(known=False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='settings.yaml', help='config file XXX.yaml path')
+    parser.add_argument('--name', type=str, default='', help='evaluate which model, name')
+    parser.add_argument('--seq', type=int, default=1, help='evaluate how many weights from loss(small -> big)')
+
+    opt = parser.parse_known_args()[0] if known else parser.parse_args()
+
+    return opt
+
 
 if __name__ == '__main__':
-    eval_and_test(384)
+    opt = parse_opt(True)
+
+    eval_and_test(opt.cfg, opt.name, opt.seq)

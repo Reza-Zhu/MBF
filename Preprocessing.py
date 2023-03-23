@@ -4,14 +4,8 @@ from utils import get_yaml_value, parameter, create_dir, save_feature_network
 from torchvision import datasets, transforms
 from Create_MultiModal_Dataset import Multimodel_Dateset
 
-classes = get_yaml_value("classes")
-batchsize = get_yaml_value("batch_size")
 
-data_dir = get_yaml_value("dataset_path")
-image_size = get_yaml_value("image_size")
-
-
-def create_U1652_dataloader():
+def create_U1652_dataloader(data_dir, batch_size, image_size):
     transform_train_list = [
         # transforms.RandomResizedCrop(size=(opt.h, opt.w), scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
         transforms.Resize((image_size, image_size), interpolation=3),
@@ -43,10 +37,10 @@ def create_U1652_dataloader():
     image_datasets['drone'] = Multimodel_Dateset(os.path.join(data_dir, 'train', 'drone'),
                                                    data_transforms['train'])
     dataloaders = {}
-    dataloaders['satellite'] = torch.utils.data.DataLoader(image_datasets['satellite'], batch_size=batchsize,
+    dataloaders['satellite'] = torch.utils.data.DataLoader(image_datasets['satellite'], batch_size=batch_size,
                                                   shuffle=True)
 
-    dataloaders['drone'] = torch.utils.data.DataLoader(image_datasets['drone'], batch_size=batchsize,
+    dataloaders['drone'] = torch.utils.data.DataLoader(image_datasets['drone'], batch_size=batch_size,
                                                            shuffle=True)
     return dataloaders, image_datasets
 

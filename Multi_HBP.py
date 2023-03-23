@@ -129,12 +129,8 @@ class Hybird_ViT(nn.Module):
 
         # direct softmax
         y0, f = self.classifier(x)
-        # print("f", f.shape)
-        # multi modal softmax
-        # t = t.view(t.size(0), -1)
-        # x = torch.concat([x, t], dim=1)
-        # y1, multi_f = self.classifier_multi(x)
 
+        # multi modal softmax
         v_f = self.restore_vit_feature(v_f)
         l_f = self.restore_vit_feature(l_f)
 
@@ -143,24 +139,16 @@ class Hybird_ViT(nn.Module):
         x2 = self.hbp(p_f, l_f)
         x3 = self.hbp(v_f, l_f)
         x = torch.concat([x1, x2, x3], dim=1)
-        # print(x1.shape)
 
         y2, hbp_f = self.classifier_hbp(x)
-        # print("hbp", hbp_f.shape)
-        # after lpn softmax*2
+
         result = self.get_part_pool(v_f)
 
-        # result = map(self.gem, result)
-        # lpn_f = torch.concat(result, dim=2)
-        # print(result[0].shape)
         if self.training:
             y3, lpn_f = self.part_classifier(result)
-            # print("lpn", lpn_f.shape)
         else:
             lpn_f = self.part_classifier(result)
             y3 = [None, None]
-        # print(len(y3), lpn_f.shape)
-
 
         y.append(y0)
         # y.append(y1)
@@ -173,12 +161,8 @@ class Hybird_ViT(nn.Module):
         else:
             f = f.view(f.size()[0], f.size()[1], 1)
             hbp_f = hbp_f.view(hbp_f.size()[0], hbp_f.size()[1], 1)
-            # print(f.shape, hbp_f.shape, lpn_f.shape)
             f_all = torch.concat([f, hbp_f, lpn_f], dim=2)
-            # print("fall", f_all.shape)
         return y, f_all
-        
-        # return y, f
 
     def forward(self, x1, x2, t1, t2):
 
@@ -281,10 +265,8 @@ class Hybird_ViT(nn.Module):
 if __name__ == '__main__':
     # create_model()
     model = Hybird_ViT(classes=701, drop_rate=0.3).cuda()
-    # print(model)
-    # print(model.model_1.patch_embed.backbone.stages[-1])
+
     feature = torch.randn(8, 3, 384, 384).cuda()
     text = torch.rand(8, 1, 768).cuda()
     output = model(feature, feature, text, text)
-    # print(output1[0].shape)
-    # print(f1.shape)
+    print(output)
