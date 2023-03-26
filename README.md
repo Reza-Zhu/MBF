@@ -27,6 +27,8 @@ pip install timm pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pyt
 ```
 ### Generate word embeddings for University-1652
 University-1652 Dataset Link https://github.com/layumi/University1652-Baseline
+
+
 set correct dataset path in settings.yaml, then run
 ```shell
 python U1652_bert.py
@@ -112,6 +114,16 @@ Best weights have been uploaded
 
 Any questions or suggestions feel free to contact me 
 email : m025120503@sues.edu.cn
+
+## Relevant research
+
+SUES-200 https://github.com/Reza-Zhu/SUES-200-Benchmark
+
+University-1652 https://github.com/layumi/University1652-Baseline
+
+LPN https://github.com/wtyhub/LPN
+
+FRSA https://github.com/dmmm1997/fsra
 
 ## Citation
 
