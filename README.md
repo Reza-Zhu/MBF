@@ -17,8 +17,9 @@ Paper Link : https://doi.org/10.3390/s23020720 (Open Access)
 | **MBF(ours)** | 384*384    | 89.05                 | 90.61                 | 93.15             | 88.17             |
 
 ## Quick Start
-Installation
+### Installation
 Install Pytorch and Torchvision https://pytorch.org/get-started/locally/
+
 install other libs
 ```shell
 pip install timm pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
@@ -70,11 +71,39 @@ University-1652 dir tree:
 ```shell
 python train.py --cfg "settings.yaml"
 ```
+Config file (settings.yaml) sets parameter and path
+```text
+# dateset path
+dataset_path: /home/sues/media/disk1/University-Release-MultiModel/University-Release
+weight_save_path: /home/sues/save_model_weight
+
+# apply LPN and set block number
+LPN : 1
+block : 2
+
+# super parameters
+batch_size : 16
+num_epochs : 80
+drop_rate : 0.35
+weight_decay : 0.0001
+lr : 0.01
+
+#intial parameters
+image_size: 384
+fp16 : 1
+classes : 701
+
+model : MBF
+name: MBF_1652_2022-11-15-18:56:39 
+```
+
 
 ### Test and evaluate
 ```shell
 python U1652_test_and_evaluate.py --cfg "settings.yaml" --name "your_weight_dirname_1652_2022-11-16-15:14:14" --seq 1
 ```
+
+
 
 ### Best Weights
 Please check the Release page
