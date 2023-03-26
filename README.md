@@ -26,6 +26,7 @@ pip install timm pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pyt
 
 ```
 ### Generate word embeddings for University-1652
+University-1652 Dataset Link https://github.com/layumi/University1652-Baseline
 set correct dataset path in settings.yaml, then run
 ```shell
 python U1652_bert.py
@@ -113,6 +114,7 @@ Any questions or suggestions feel free to contact me
 email : m025120503@sues.edu.cn
 
 ## Citation
+
 ```text
 @Article{uav2023zhu,
 AUTHOR = {Zhu, Runzhe and Yang, Mingze and Yin, Ling and Wu, Fei and Yang, Yuncheng},
@@ -127,5 +129,4 @@ PubMedID = {36679517},
 ISSN = {1424-8220},
 DOI = {10.3390/s23020720}
 ```
-
 }
