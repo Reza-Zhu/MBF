@@ -316,8 +316,8 @@ def eval_and_test(cfg_path, name, seqs):
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='settings.yaml', help='config file XXX.yaml path')
-    parser.add_argument('--name', type=str, default='', help='evaluate which model, name')
-    parser.add_argument('--seq', type=int, default=1, help='evaluate how many weights from loss(small -> big)')
+    parser.add_argument('--name', type=str, default='', help='evaluate which weight,dir name')
+    parser.add_argument('--seq', type=int, default=1, help='evaluate how many weights from loss value(small -> big)')
 
     opt = parser.parse_known_args()[0] if known else parser.parse_args()
 

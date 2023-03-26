@@ -1,6 +1,6 @@
 import os
 import torch
-from utils import create_dir
+from utils import create_dir, get_yaml_value
 from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 class Word_Embeding:
@@ -40,6 +40,11 @@ class Word_Embeding:
         # print("Our final sentence embedding vector of shape:", sentence_embedding[0].shape[0])
         return sentence_embedding
 
+
+param = get_yaml_value("settings.yaml")
+train_path = os.path.join(param["dataset_path"], "train")
+test_path = os.path.join(param["dataset_path"], "test")
+
 wd = Word_Embeding()
 
 # calculate image height from 256m - 121.5m
@@ -48,8 +53,6 @@ heights = [256 - coff*i for i in range(1, 54)]
 heights.insert(0, 256)
 print("image-%02d" % 1)
 
-train_path = "../University-Release/train"
-test_path = "../University-Release/test"
 
 create_dir(os.path.join(train_path, "text_drone"))
 create_dir(os.path.join(test_path, "text_drone"))

@@ -19,6 +19,6 @@ fp16 : 1
 classes : 701
 
 model : MBF
-#query : drone
+query : drone
 name: MBF
 
