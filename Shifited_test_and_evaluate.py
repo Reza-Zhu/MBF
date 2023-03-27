@@ -159,9 +159,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--query', type=str, default="drone", help='query set: drone or satellite')
     parser.add_argument('--cfg', type=str, default='settings.yaml', help='config file XXX.yaml path')
-    parser.add_argument('--multi', type=int, default=1, help='multi number for example: if multi == 1 fusion image '
-                                                             'number = 50/1 = 50')
-    parser.add_argument('--weight', type=str, default="/home/sues/save_model_weight/Release_1652_2022-11-19-01:26:05/net_137.pth", help='evaluate which weight, path')
+
+    parser.add_argument('--weight', type=str, default=None, help='evaluate which weight, path')
     parser.add_argument('--csv_save_path', type=str, default="./result", help="evaluation result table store path")
     parser.add_argument('--gap', type=int, default=10, help='shifted gap')
     opt = parser.parse_known_args()[0]

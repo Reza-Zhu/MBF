@@ -106,7 +106,16 @@ name: MBF_1652_2022-11-15-18:56:39
 python U1652_test_and_evaluate.py --cfg "settings.yaml" --name "your_weight_dirname_1652_2022-11-16-15:14:14" --seq 1
 ```
 
+### Multiply Queries
+```shell
+python multi_test_and_evaluate.py --cfg "settings.yaml" --multi 1 --weight "your_weight_path.pth" --csv_save_path "./result"
 
+```
+
+### Shifted Query
+```shell
+python Shifted_test_and_evaluate.py --cfg "settings.yaml" --query "drone" --weight "your_weight_path.pth" --csv_save_path "./result" --gap 10
+```
 
 ### Best Weights
 Please check the Release page

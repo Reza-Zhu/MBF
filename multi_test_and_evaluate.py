@@ -184,7 +184,6 @@ if __name__ == '__main__':
     parser.add_argument('--multi', type=int, default=1, help='multi number for example: if multi == 1 fusion image '
                                                              'number = 50/1 = 50')
     parser.add_argument('--weight', type=str, default=None, help='evaluate which weight, path')
-
     parser.add_argument('--csv_save_path', type=str, default="./result", help="evaluation result table store path")
     opt = parser.parse_known_args()[0]
 
