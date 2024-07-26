@@ -123,7 +123,7 @@ Please check the Release page
 Best weights have been uploaded
 
 Any questions or suggestions feel free to contact me 
-email : m025120503@sues.edu.cn
+email : rzzhu24@m.fudan.edu.cn
 
 ## Relevant research
 
