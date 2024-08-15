@@ -1,0 +1,25 @@
+
+# dateset path
+dataset_path: /home/LVM_date/zhurz/dataset/SUES-200-512x512
+weight_save_path: /home/LVM_date/zhurz/dataset/save_model_weight
+
+# apply LPN and set block number
+LPN : 1
+block : 2
+
+# super parameters
+batch_size : 8
+num_epochs : 40
+drop_rate : 0.35
+weight_decay : 0.0001
+lr : 0.01
+
+#intial parameters
+height : 150
+query : drone
+image_size: 384
+fp16 : 0
+classes : 120
+
+model : MBF
+name: MBF
