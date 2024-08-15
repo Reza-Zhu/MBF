@@ -13,7 +13,12 @@ from shutil import copyfile, copy
 import torch.distributed as dist
 
 # from new_model import two_view_net
-
+def get_params_value(key_name, file_name="settings.yaml"):
+    f = open(file_name, 'r', encoding="utf-8")
+    t_value = yaml.load(f, Loader=yaml.FullLoader)
+    f.close()
+    params = t_value[key_name]
+    return params
 
 def get_yaml_value(config_path):
     f = open(config_path, 'r', encoding="utf-8")
@@ -24,7 +29,7 @@ def get_yaml_value(config_path):
 
 
 def save_network(network, dir_model_name, epoch_label, loss):
-    save_path = get_yaml_value('weight_save_path')
+    save_path = get_params_value('weight_save_path')
     # with open("settings.yaml", "r", encoding="utf-8") as f:
     #     dict = yaml.load(f, Loader=yaml.FullLoader)
     #     dict['name'] = dir_model_name
@@ -46,7 +51,7 @@ def save_network(network, dir_model_name, epoch_label, loss):
 
 
 def save_feature_network(network, dir_model_name, epoch_label):
-    save_path = get_yaml_value('weight_save_path')
+    save_path = get_params_value('weight_save_path')
     # with open("settings.yaml", "r", encoding="utf-8") as f:
     #     dict = yaml.load(f, Loader=yaml.FullLoader)
     #     dict['name'] = dir_model_name
@@ -98,18 +103,18 @@ def get_model_list(dirname, key, seq):
 
 
 def load_network(seq):
-    model_name = get_yaml_value("model")
+    model_name = get_params_value("model")
     print(model_name)
-    name = get_yaml_value("name")
-    weight_save_path = get_yaml_value("weight_save_path")
+    name = get_params_value("name")
+    weight_save_path = get_params_value("weight_save_path")
 
     dirname = os.path.join(weight_save_path, name)
     # print(get_model_list(dirname, 'net', seq))
     last_model_name = os.path.basename(get_model_list(dirname, 'net', seq))
     print(get_model_list(dirname, 'net', seq) + " " + "seq: " + str(seq))
     # print(os.path.join(dirname,last_model_name))
-    classes = get_yaml_value("classes")
-    drop_rate = get_yaml_value("drop_rate")
+    classes = get_params_value("classes")
+    drop_rate = get_params_value("drop_rate")
 
     model = Hybird_ViT(classes, drop_rate)
     # model = model_.ResNet(classes, drop_rate)

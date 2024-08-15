@@ -45,9 +45,9 @@ class ClassBlock(nn.Module):
 
 
 class Hybird_ViT(nn.Module):
-    def __init__(self, classes, drop_rate, share_weight=True):
+    def __init__(self, classes, drop_rate, block, share_weight=True):
         super(Hybird_ViT, self).__init__()
-        self.block = 2
+        self.block = block
         conv_layer = partial(StdConv2dSame, eps=1e-8)
         backbone = ResNetV2(
             layers=(3, 4, 9), num_classes=0, global_pool='', in_chans=3,

@@ -64,7 +64,7 @@ def train(config_path):
     class_names = image_datasets['satellite'].classes
     print(len(class_names))
 
-    model = Hybird_ViT(classes, drop_rate).cuda()
+    model = Hybird_ViT(classes, drop_rate, all_block).cuda()
 
     # apply LPN strategy
     if LPN:

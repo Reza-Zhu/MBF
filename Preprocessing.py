@@ -31,6 +31,7 @@ def create_U1652_dataloader(data_dir, batch_size, image_size):
     data_transforms = {
         'train': transforms.Compose(transform_train_list),
         'satellite': transforms.Compose(transform_satellite_list)}
+
     image_datasets = {}
     image_datasets['satellite'] = Multimodel_Dateset(os.path.join(data_dir, 'train', 'satellite'),
                                                        data_transforms['satellite'])
