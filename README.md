@@ -22,7 +22,7 @@ Install Pytorch and Torchvision https://pytorch.org/get-started/locally/
 
 install other libs （timm should be 0.6.7, not latest）
 ```shell
-pip install timm pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
+pip install timm==0.6.7 pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
 
 ```
 
