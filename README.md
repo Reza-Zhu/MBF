@@ -20,11 +20,12 @@ Paper Link : https://doi.org/10.3390/s23020720 (Open Access)
 ### Installation
 Install Pytorch and Torchvision https://pytorch.org/get-started/locally/
 
-install other libs
+install other libs （timm should be 0.6.7, not latest）
 ```shell
-pip install timm pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
+pip install timm==0.6.7 pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
 
 ```
+
 ### Generate word embeddings for University-1652
 University-1652 Dataset Link https://github.com/layumi/University1652-Baseline
 
@@ -122,7 +123,7 @@ Please check the Release page
 Best weights have been uploaded
 
 Any questions or suggestions feel free to contact me 
-email : m025120503@sues.edu.cn
+email : rzzhu24@m.fudan.edu.cn
 
 ## Relevant research
 

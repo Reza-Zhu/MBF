@@ -9,10 +9,30 @@ from timm.models.layers import StdConv2dSame, StdConv2d, to_2tuple
 from vision_transformer import VisionTransformer, checkpoint_filter_fn, _create_vision_transformer, Block
 # from timm.models.vision_transformer_hybrid import _create_vision_transformer_hybrid
 from functools import partial
-from model_ import weights_init_kaiming, weights_init_classifier
 from einops import rearrange
 from activation import GeM
 
+
+
+def weights_init_kaiming(m):
+    classname = m.__class__.__name__
+    # print(classname)
+    if classname.find('Conv') != -1:
+        init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')  # For old pytorch, you may use kaiming_normal.
+    elif classname.find('Linear') != -1:
+        init.kaiming_normal_(m.weight.data, a=0, mode='fan_out')
+        init.constant_(m.bias.data, 0.0)
+    elif classname.find('BatchNorm1d') != -1:
+        init.normal_(m.weight.data, 1.0, 0.02)
+        init.constant_(m.bias.data, 0.0)
+
+
+def weights_init_classifier(m):
+    classname = m.__class__.__name__
+    if classname.find('Linear') != -1:
+        init.normal_(m.weight.data, std=0.001)
+        init.constant_(m.bias.data, 0.0)
+        
 
 class ClassBlock(nn.Module):
 
@@ -260,6 +280,8 @@ class Hybird_ViT(nn.Module):
         if not self.training:
             return torch.stack(y, dim=2)
         return y, torch.concat(features, dim=1)
+
+
 
 
 if __name__ == '__main__':
