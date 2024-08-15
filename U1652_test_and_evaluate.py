@@ -13,7 +13,6 @@ import scipy
 from utils import fliplr, load_network, which_view, get_id, get_yaml_value
 from torchvision import datasets, models, transforms
 from Create_MultiModal_Dataset import Multimodel_Dateset
-from Multi_HBP import Hybird_ViT
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")

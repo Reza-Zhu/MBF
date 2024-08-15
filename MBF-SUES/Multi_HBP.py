@@ -13,7 +13,7 @@ from vision_transformer import VisionTransformer, checkpoint_filter_fn, _create_
 from functools import partial
 from model_ import weights_init_kaiming, weights_init_classifier
 from einops import rearrange
-from activation import GeM
+
 
 class GeM(nn.Module):
     def __init__(self, dim=2048, p=3, eps=1e-6):

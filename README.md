@@ -23,7 +23,6 @@ Install Pytorch and Torchvision https://pytorch.org/get-started/locally/
 install other libs （timm should be 0.6.7, not latest）
 ```shell
 pip install timm==0.6.7 pyyaml pytorch-metric-learning scipy pandas grad-cam pillow pytorch_pretrained_bert
-
 ```
 
 ### Generate word embeddings for University-1652
@@ -33,6 +32,13 @@ University-1652 Dataset Link https://github.com/layumi/University1652-Baseline
 set correct dataset path in settings.yaml, then run
 ```shell
 python U1652_bert.py
+```
+
+### Generate word embeddings for SUES-200
+SUES-200 Dataset Link https://github.com/Reza-Zhu/SUES-200-Benchmark
+Download SUES-200 Dataset and split dataset, set correct dataset path in settings.yaml, then run
+```shell
+python SUES_bert.py
 ```
 
 ### Dataset files form
@@ -70,13 +76,58 @@ University-1652 dir tree:
 │       ├── text_satellite/ 
 |           ├── satellite.pth
 ```
+SUES-200 dir tree:
+```text
+├── SUES-200/
+│ ├── Training/
+│     ├── 150
+│          ├── drone/  /* drone-view training images 
+│              ├── 0001  /* drone-view image of the first site: 50 images
+│                  ├── 0.jpg
+│                  ├── 1.jpg
+│ 	          ...
+│                  ├── 49.jpg
+│              ├── 0002  /* drone-view image of the second site: 50 images
+│                   ...
+│          ├── satellite/  /* satellite-view training images 
+│              ├── 0001  /* satellite-view image of the first site: 1 image
+│                  ├── 0.png
+│               ├── 0002  /* satellite-view image of the second site: 1 image
+│                   ...
+│          ├── text_drone 
+│              ├── drone.pth /* word embeddings
+│          ├── text_satellite
+│              ├── satellite.pth /* word embeddings
+│     ├── 200
+│     ├── 250
+│     ├── 300
+│ ├── Testing/
+│     ├── 150 
+│             ├── query_drone/  /* drone-view query images 
+│                 ├── 0008
+│                        ...
+│             ├── gallery_drone/ /* drone-view gallery images 
+│                  ├── 0001
+│                     ...
+│                  ├── 0200
+│             ├── query_satellite/    /* satellite-view query images
+│             ├── gallery_satellite/  /* satellite-view gallery images
+│             ├── text_drone
+│                  ├── drone.pth
+│             ├── text_satellite
+│                  ├── satellite.pth
+│     ├── 200
+│     ├── 250
+│     ├── 300  
 
-### Train
+```
+
+### Train for University-1652
 ```shell
 python train.py --cfg "settings.yaml"
 ```
 Config file (settings.yaml) sets parameter and path
-```text
+```yaml
 # dateset path
 dataset_path: /home/sues/media/disk1/University-Release-MultiModel/University-Release
 weight_save_path: /home/sues/save_model_weight
@@ -100,27 +151,65 @@ classes : 701
 model : MBF
 name: MBF_1652_2022-11-15-18:56:39 
 ```
+### Train for SUES-200
+```shell
+python train.py --cfg "settings.yaml"
+```
+Config file (settings.yaml) sets parameter and path
+```yaml
+
+# dateset path
+dataset_path: /home/LVM_date/zhurz/dataset/SUES-200-512x512
+weight_save_path: /home/LVM_date/zhurz/dataset/save_model_weight
+
+# apply LPN and set block number
+LPN : 1
+block : 2
+
+# super parameters
+batch_size : 8
+num_epochs : 40
+drop_rate : 0.35
+weight_decay : 0.0001
+lr : 0.01
+
+#intial parameters
+height : 150
+query : drone
+image_size: 384
+fp16 : 0
+classes : 120
+
+model : MBF
+name: MBF
+```
 
 
-### Test and evaluate
+### Test and evaluate (University-1652 Dataset)
 ```shell
 python U1652_test_and_evaluate.py --cfg "settings.yaml" --name "your_weight_dirname_1652_2022-11-16-15:14:14" --seq 1
 ```
 
-### Multiply Queries
+### Test and evaluate (SUES-200 Dataset)
+```shell
+python test_and_evaluate.py --cfg "settings.yaml" --name "your_weight_dirname_1652_2022-11-16-15:14:14" --seq 1
+```
+
+
+### Multiply Queries (University-1652 Dataset)
 ```shell
 python multi_test_and_evaluate.py --cfg "settings.yaml" --multi 1 --weight "your_weight_path.pth" --csv_save_path "./result"
 
 ```
 
-### Shifted Query
+### Shifted Query (University-1652 Dataset)
 ```shell
 python Shifted_test_and_evaluate.py --cfg "settings.yaml" --query "drone" --weight "your_weight_path.pth" --csv_save_path "./result" --gap 10
 ```
 
 ### Best Weights
 Please check the Release page
-Best weights have been uploaded
+Best weights for University-1652 Dataset have been uploaded
 
 Any questions or suggestions feel free to contact me 
 email : rzzhu24@m.fudan.edu.cn

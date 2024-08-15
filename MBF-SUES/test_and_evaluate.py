@@ -5,20 +5,19 @@ import time
 import timm
 import torch
 import shutil
+import argparse
+
 import numpy as np
 import pandas as pd
 from torch import nn
-from Multi_HBP import Hybird_ViT
 
 from utils import fliplr, load_network, which_view, get_id, get_yaml_value
-from torchvision import datasets, models, transforms
-# from Create_MultiModal_Dataset import
+
 from Preprocessing import Create_Testing_Datasets
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
 
-param_dict = get_yaml_value()
 def evaluate(qf, ql, gf, gl):
 
     query = qf.view(-1, 1)
@@ -169,15 +168,10 @@ def extract_feature(model, dataloaders, block, LPN, view_index=1):
 
 
 ############################### main function #######################################
-def eval_and_test():
-    image_size = param_dict["image_size"]
-
-    data_transforms = transforms.Compose([
-        transforms.Resize((image_size, image_size), interpolation=3),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
+def eval_and_test(cfg_path, name, seqs):
+    param_dict = get_yaml_value(cfg_path)
+    if name == "":
+        name = param_dict["name"]
     block = param_dict["block"]
     LPN = param_dict["LPN"]
     data_path = param_dict["dataset_path"]
@@ -186,8 +180,6 @@ def eval_and_test():
     height = param_dict["height"]
 
     all_block = block
-    # image_datasets = {x: Multimodel_Dateset(os.path.join(data_dir, 'test', x), data_transforms) for x in
-    #                   ['gallery_satellite', 'gallery_drone', 'query_satellite', 'query_drone']}
 
     dataloaders, image_datasets = Create_Testing_Datasets(test_data_path=data_path + "/Testing/{}".format(height),
                                                           batch_size=batch_size,
@@ -195,27 +187,26 @@ def eval_and_test():
 
     # print("Testing Start >>>>>>>>")
     table_path = os.path.join(param_dict["weight_save_path"],
-                              param_dict["name"] + ".csv")
+                              name + ".csv")
     save_model_list = glob.glob(os.path.join(param_dict["weight_save_path"],
-                                             param_dict['name'], "*.pth"))
+                                             name, "*.pth"))
     # print(param_dict("name"))
     if os.path.exists(os.path.join(param_dict["weight_save_path"],
-                                   param_dict['name'])) and len(save_model_list) >= 1:
+                                   name)) and len(save_model_list) >= 1:
         if not os.path.exists(table_path):
             evaluate_csv = pd.DataFrame(index=["recall@1", "recall@5", "recall@10", "recall@1p", "AP", "time"])
         else:
             evaluate_csv = pd.read_csv(table_path)
             evaluate_csv.index = evaluate_csv["index"]
         for query in ['satellite', 'drone']:
-            for seq in range(-1, 0):
+            for seq in range(-seqs, 0):
                 # net_name = "mae_pretrained"
                 # model, net_name = load_network(seq=seq)
-                net_name = "LPN"
                 # model = model_.two_view_net(701, 0.3)
                 # model.load_state_dict(torch.load("/home/sues/Reza/SS-Study/LPN/save_model_weight/three_view_lr_0.01_dr_0.5_2/net_119.pth"))
                 # print(model)
                 # LPN
-                model, last_model_name = load_network(seq)
+                model, net_name = load_network(seq)
                 # model = Hybird_ViT(120, 0.1)
                 # model.load_state_dict(torch.load(net_path))
                 if LPN:
@@ -323,7 +314,7 @@ def eval_and_test():
                 )
 
                 # show result and save
-                save_path = os.path.join(param_dict["weight_save_path"], param_dict['name'])
+                save_path = os.path.join(param_dict["weight_save_path"], name)
                 save_txt_path = os.path.join(save_path, '%s_to_%s_%s_%.2f_%.2f.txt' % (query_name[6:], gallery_name[8:], net_name[:7], recall_1, AP))
                 # print(save_txt_path)
 
@@ -354,5 +345,18 @@ def eval_and_test():
         print("Don't have enough weights to evaluate!")
 
 
+def parse_opt(known=False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='settings.yaml', help='config file XXX.yaml path')
+    parser.add_argument('--name', type=str, default='', help='evaluate which weight,dir name')
+    parser.add_argument('--seq', type=int, default=1, help='evaluate how many weights from loss value(small -> big)')
+
+    opt = parser.parse_known_args()[0] if known else parser.parse_args()
+
+    return opt
+
+
 if __name__ == '__main__':
-    eval_and_test()
+    opt = parse_opt(True)
+
+    eval_and_test(opt.cfg, opt.name, opt.seq)
